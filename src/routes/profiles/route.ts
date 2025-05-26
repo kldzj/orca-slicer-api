@@ -1,8 +1,7 @@
-
 import { Router } from "express";
 import { uploadJson } from "../../middleware/upload";
-import type { Category } from "../../models/slicing";
-import { saveSetting, listSettings, getSetting } from "./data/settings.service";
+import type { Category } from "../slicing/models";
+import { saveSetting, listSettings, getSetting } from "./settings.service";
 
 const router = Router();
 

@@ -5,8 +5,8 @@ import * as path from "path";
 import * as os from "os";
 import { execFileSync } from "child_process";
 import { uploadModel } from "../../middleware/upload";
-import type { SlicingSettings } from "../../models/slicing";
-import { listSettings } from "../profiles/data/settings.service";
+import type { SlicingSettings } from "./models";
+import { listSettings } from "../profiles/settings.service";
 
 const router = Router();
 

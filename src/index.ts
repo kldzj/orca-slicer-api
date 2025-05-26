@@ -1,6 +1,6 @@
 import express from "express";
-import profiles from "./routes/profiles/profiles";
-import slicing from "./routes/slicing/slicing";
+import profiles from "./routes/profiles/route";
+import slicing from "./routes/slicing/route";
 
 const app = express();
 const port = 3000;

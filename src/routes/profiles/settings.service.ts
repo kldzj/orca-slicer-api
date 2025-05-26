@@ -1,6 +1,6 @@
 import { promises as fs } from "fs";
 import { join } from "path";
-import type { Category } from "../../../models/slicing";
+import type { Category } from "../slicing/models";
 
 const BASE = process.env.DATA_PATH || join(process.cwd(), "data");
 
