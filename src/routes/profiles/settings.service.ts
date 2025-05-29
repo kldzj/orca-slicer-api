@@ -1,6 +1,7 @@
 import { promises as fs } from "fs";
 import { join } from "path";
 import type { Category } from "../slicing/models";
+import { AppError } from "../../middleware/error";
 
 const BASE = process.env.DATA_PATH || join(process.cwd(), "data");
 
@@ -17,13 +18,21 @@ export async function saveSetting(
   name: string,
   content: object
 ): Promise<void> {
-  const dir = join(BASE, category);
-  await fs.mkdir(dir, { recursive: true });
-  await fs.writeFile(
-    join(dir, `${name}.json`),
-    JSON.stringify(content, null, 2),
-    "utf8"
-  );
+  try {
+    const dir = join(BASE, category);
+    await fs.mkdir(dir, { recursive: true });
+    await fs.writeFile(
+      join(dir, `${name}.json`),
+      JSON.stringify(content, null, 2),
+      "utf8"
+    );
+  } catch (error) {
+    throw new AppError(
+      500,
+      `Failed to save settings`,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 }
 
 /**
@@ -33,6 +42,7 @@ export async function saveSetting(
  * @param category - The category to filter settings.
  * @returns A Promise that resolves to an array of file names (without .json extension)
  * or an empty array if the directory doesn't exist.
+ * @throws {AppError} If the directory cannot be read.
  */
 export async function listSettings(category: Category): Promise<string[]> {
   const dir = join(BASE, category);
@@ -42,8 +52,11 @@ export async function listSettings(category: Category): Promise<string[]> {
       .filter((f) => f.endsWith(".json"))
       .map((f) => f.replace(/\.json$/, ""));
   } catch (error) {
-    console.error("Error reading settings:", error);
-    return [];
+    throw new AppError(
+      500,
+      `Failed to read settings directory`,
+      error instanceof Error ? error.message : String(error)
+    );
   }
 }
 
@@ -52,12 +65,21 @@ export async function listSettings(category: Category): Promise<string[]> {
  * @param category - The category directory containing the setting file.
  * @param name - The name of the setting file (without .json extension).
  * @returns A Promise that resolves to the parsed JSON content.
+ * @throws {AppError} If the file cannot be read or parsed.
  */
 export async function getSetting(
   category: Category,
   name: string
 ): Promise<object> {
-  const filepath = join(BASE, category, `${name}.json`);
-  const raw = await fs.readFile(filepath, "utf8");
-  return JSON.parse(raw);
+  try {
+    const filepath = join(BASE, category, `${name}.json`);
+    const raw = await fs.readFile(filepath, "utf8");
+    return JSON.parse(raw);
+  } catch (error) {
+    throw new AppError(
+      500,
+      `Failed to read setting`,
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 }

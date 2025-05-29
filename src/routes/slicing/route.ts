@@ -7,16 +7,15 @@ import { execFileSync } from "child_process";
 import { uploadModel } from "../../middleware/upload";
 import type { SlicingSettings } from "./models";
 import { listSettings } from "../profiles/settings.service";
+import { AppError } from "../../middleware/error";
 
 const router = Router();
 
 router.post("/", uploadModel.single("file"), async (req, res) => {
   if (!req.file) {
-    res.status(400).json({
-      error: "File is required",
-    });
-    return;
+    throw new AppError(400, "File is required for slicing");
   }
+
   const { printer, preset, filament, bedType } = req.body as SlicingSettings;
 
   if (
@@ -28,22 +27,30 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     !(await listSettings("presets")).includes(preset) ||
     !(await listSettings("filaments")).includes(filament)
   ) {
-    res.status(400).json({
-      error:
-        "Invalid slicing settings. 'printer', 'preset', and 'filament' are required.",
-    });
-    return;
+    throw new AppError(400, "Invalid or missing slicing settings");
   }
 
-  const workdir = await fs.mkdtemp(path.join(os.tmpdir(), "slice-"));
-  const inputDir = path.join(workdir, "input");
-  const outputDir = path.join(workdir, "output");
-  await fs.mkdir(inputDir, { recursive: true });
-  await fs.mkdir(outputDir, { recursive: true });
+  let workdir;
+  let inPath;
+  let outputDir;
 
-  const originalName = req.file.originalname;
-  const inPath = path.join(inputDir, originalName);
-  await fs.writeFile(inPath, req.file.buffer);
+  try {
+    workdir = await fs.mkdtemp(path.join(os.tmpdir(), "slice-"));
+    const inputDir = path.join(workdir, "input");
+    outputDir = path.join(workdir, "output");
+    await fs.mkdir(inputDir, { recursive: true });
+    await fs.mkdir(outputDir, { recursive: true });
+
+    const originalName = req.file.originalname;
+    inPath = path.join(inputDir, originalName);
+    await fs.writeFile(inPath, req.file.buffer);
+  } catch (error) {
+    throw new AppError(
+      500,
+      "Failed to prepare slicing",
+      error instanceof Error ? error.message : String(error)
+    );
+  }
 
   const basePath = process.env.DATA_PATH || path.join(process.cwd(), "data");
 
@@ -69,7 +76,11 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
 
   try {
     if (!process.env.ORCASLICER_PATH) {
-      throw new Error("ORCASLICER_PATH environment variable is not defined");
+      throw new AppError(
+        500,
+        "Slicing is not configured properly on the server",
+        "ORCASLICER_PATH environment variable is not defined"
+      );
     }
     execFileSync(process.env.ORCASLICER_PATH, args, {
       encoding: "utf-8",
@@ -77,9 +88,11 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     });
   } catch (err) {
     await fs.rm(workdir, { recursive: true, force: true });
-    console.error(err);
-    res.status(500).json({ error: "Slicing failed" });
-    return;
+    throw new AppError(
+      500,
+      "Failed to slice the model",
+      err instanceof Error ? err.message : String(err)
+    );
   }
 
   const files = await fs.readdir(outputDir);
