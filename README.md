@@ -31,7 +31,7 @@ npm run dev
 ## Configuration
 
 `ORCASLICER_PATH` (required): Absolute path to the OrcaSlicer binary.\
-`DATA_PATH` (required): Base directory for user uploaded profiles.
+`DATA_PATH` (required): Base directory for user uploaded profiles.\
 `ENV` (required): Sets if run in development (dev) or production (prod)
 
 Profiles are stored under:
