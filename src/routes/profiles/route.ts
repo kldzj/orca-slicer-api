@@ -51,7 +51,7 @@ function validateNameNotEmpty(name: string) {
 }
 
 function validateCategory(category: string) {
-  if (category || !["printers", "presets", "filaments"].includes(category)) {
+  if (!category || !["printers", "presets", "filaments"].includes(category)) {
     throw new AppError(400, "Invalid or missing category");
   }
 }
