@@ -1,13 +1,13 @@
-import { Router } from "express";
-
-import * as fs from "fs/promises";
-import * as path from "path";
-import * as os from "os";
-import { execFileSync } from "child_process";
+import e, { Router } from "express";
 import { uploadModel } from "../../middleware/upload";
-import type { SlicingSettings } from "./models";
-import { listSettings } from "../profiles/settings.service";
 import { AppError } from "../../middleware/error";
+import { listSettings } from "../profiles/settings.service";
+import type { SlicingSettings } from "./models";
+import { sliceModel } from "./slicing.service";
+import fs from "fs/promises";
+import { createWriteStream } from "fs";
+import path from "path";
+import archiver from "archiver";
 
 const router = Router();
 
@@ -16,7 +16,8 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(400, "File is required for slicing");
   }
 
-  const { printer, preset, filament, bedType } = req.body as SlicingSettings;
+  const { printer, preset, filament, bedType, allPlates } =
+    req.body as SlicingSettings;
 
   if (
     !printer ||
@@ -30,76 +31,45 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(400, "Invalid or missing slicing settings");
   }
 
-  let workdir;
-  let inPath;
-  let outputDir;
-
-  try {
-    workdir = await fs.mkdtemp(path.join(os.tmpdir(), "slice-"));
-    const inputDir = path.join(workdir, "input");
-    outputDir = path.join(workdir, "output");
-    await fs.mkdir(inputDir, { recursive: true });
-    await fs.mkdir(outputDir, { recursive: true });
-
-    const originalName = req.file.originalname;
-    inPath = path.join(inputDir, originalName);
-    await fs.writeFile(inPath, req.file.buffer);
-  } catch (error) {
-    throw new AppError(
-      500,
-      "Failed to prepare slicing",
-      error instanceof Error ? error.message : String(error)
-    );
-  }
-
-  const basePath = process.env.DATA_PATH || path.join(process.cwd(), "data");
-
-  const settingsArg = `${basePath}/printers/${printer}.json;${basePath}/presets/${preset}.json`;
-  const args = [
-    "--arrange",
-    "1",
-    "--orient",
-    "1",
-    "--slice",
-    "1",
-    "--allow-newer-file",
-    "--load-settings",
-    settingsArg,
-    "--load-filaments",
-    `${basePath}/filaments/${filament}.json`,
-    "--outputdir",
-    outputDir,
-    "--curr-bed-type",
-    bedType,
-    inPath,
-  ];
-
-  try {
-    if (!process.env.ORCASLICER_PATH) {
-      throw new AppError(
-        500,
-        "Slicing is not configured properly on the server",
-        "ORCASLICER_PATH environment variable is not defined"
-      );
+  const { gcodes, workdir } = await sliceModel(
+    req.file.buffer,
+    req.file.originalname,
+    {
+      printer,
+      preset,
+      filament,
+      bedType,
+      allPlates,
     }
-    execFileSync(process.env.ORCASLICER_PATH, args, {
-      encoding: "utf-8",
-      stdio: ["ignore", "pipe", "pipe"],
+  );
+
+  if (gcodes.length === 1) {
+    try {
+      res.download(gcodes[0]);
+    } finally {
+      await fs.rm(workdir, { recursive: true, force: true });
+    }
+  } else if (gcodes.length > 1) {
+    res.attachment("result.zip");
+    const archive = archiver("zip", { zlib: { level: 9 } });
+
+    archive.on("error", (err) => {
+      throw new AppError(500, `Error creating archive: ${err.message}`);
     });
-  } catch (err) {
-    await fs.rm(workdir, { recursive: true, force: true });
-    throw new AppError(
-      500,
-      "Failed to slice the model",
-      err instanceof Error ? err.message : String(err)
-    );
+
+    res.on("finish", async () => {
+      await fs.rm(workdir, { recursive: true, force: true });
+    });
+
+    archive.pipe(res);
+    gcodes.forEach((filePath) => {
+      archive.file(filePath, { name: path.basename(filePath) });
+    });
+
+    await archive.finalize();
+  } else {
+    throw new AppError(500, "No G-code files generated during slicing");
   }
-
-  const files = await fs.readdir(outputDir);
-  const gcodes = files.filter((f) => f.toLowerCase().endsWith(".gcode"));
-
-  res.download(path.join(outputDir, gcodes[0]));
-  await fs.rm(workdir, { recursive: true, force: true });
 });
 
 export default router;

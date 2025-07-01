@@ -53,9 +53,9 @@ Each profile is a JSON file from OrcaSlicer.
 
 There are still several improvements planned:
 
-- Multi-plate slicing support
+- ~~Multi-plate slicing support~~ (added for 3MF files, returns ZIP of G-codes)
 - Enhanced slicing options
-- Improved error handling
+- ~~Improved error handling~~
 - Better profile management system
 - Strengthened security measures
 - Additional quality-of-life features
