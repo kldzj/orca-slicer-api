@@ -16,13 +16,8 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(400, "File is required for slicing");
   }
 
-  const {
-    printer,
-    preset,
-    filament,
-    bedType,
-    allPlates: fullPlate,
-  } = req.body as SlicingSettings;
+  const { printer, preset, filament, bedType, allPlates } =
+    req.body as SlicingSettings;
 
   if (
     !printer ||
@@ -44,7 +39,7 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
       preset,
       filament,
       bedType,
-      allPlates: fullPlate,
+      allPlates,
     }
   );
 
