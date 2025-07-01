@@ -2,25 +2,13 @@ import { promises as fs } from "fs";
 import * as path from "path";
 import * as os from "os";
 import { execFileSync } from "child_process";
-import { AppError } from "../middleware/error";
-
-export interface SliceSettings {
-  printer: string;
-  preset: string;
-  filament: string;
-  bedType: string;
-  plate?: number | "all";
-}
-
-export interface SliceResult {
-  gcodes: string[];
-  workdir: string;
-}
+import { AppError } from "../../middleware/error";
+import type { SlicingSettings, SliceResult } from "./models";
 
 export async function sliceModel(
   file: Buffer,
   filename: string,
-  settings: SliceSettings
+  settings: SlicingSettings
 ): Promise<SliceResult> {
   let workdir: string;
   let inPath: string;
@@ -43,8 +31,7 @@ export async function sliceModel(
 
   const basePath = process.env.DATA_PATH || path.join(process.cwd(), "data");
   const settingsArg = `${basePath}/printers/${settings.printer}.json;${basePath}/presets/${settings.preset}.json`;
-  const sliceArg =
-    settings.plate === "all" ? "0" : String(settings.plate ?? 1);
+  const sliceArg = settings.allPlates === true ? "all" : "0";
 
   const args = [
     "--arrange",

@@ -1,6 +1,6 @@
 import express from "express";
 import profiles from "./routes/profiles/route";
-import slicing from "./routes/slicing";
+import slicing from "./routes/slicing/route";
 import { errorHandler } from "./middleware/error";
 import swaggerUi from "swagger-ui-express";
 import swaggerDocument from ".././swagger.json";
