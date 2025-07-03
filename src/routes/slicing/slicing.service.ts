@@ -30,11 +30,10 @@ export async function sliceModel(
   }
 
   const basePath = process.env.DATA_PATH || path.join(process.cwd(), "data");
-  const settingsArg = `${basePath}/printers/${settings.printer}.json;${basePath}/presets/${settings.preset}.json`;
 
   const args: string[] = [];
 
-  if (settings.export === "3mf") {
+  if (settings.exportType === "3mf") {
     args.push("--export-3mf", "result.3mf");
   }
 
@@ -50,6 +49,7 @@ export async function sliceModel(
   }
 
   if (settings.printer && settings.preset) {
+    const settingsArg = `${basePath}/printers/${settings.printer}.json;${basePath}/presets/${settings.preset}.json`;
     args.push("--load-settings", settingsArg);
   }
 
@@ -98,7 +98,7 @@ export async function sliceModel(
   const files = await fs.readdir(outputDir);
   let resultFiles: string[];
 
-  if (settings.export === "3mf") {
+  if (settings.exportType === "3mf") {
     resultFiles = files
       .filter((f) => f.toLowerCase().endsWith(".3mf"))
       .map((f) => path.join(outputDir, f));

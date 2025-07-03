@@ -7,7 +7,7 @@ export interface SlicingSettings {
   multicolorOnePlate?: boolean;
   arrange?: boolean;
   orient?: boolean;
-  export?: "gcode" | "3mf";
+  exportType?: "gcode" | "3mf";
 }
 
 export interface SliceResult {
