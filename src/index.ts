@@ -15,7 +15,7 @@ app.use("/slice", slicing);
 
 app.use(errorHandler);
 
-if (process.env.ENV !== "prod") {
+if (process.env.NODE_ENV !== "production") {
   app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocument));
 }
 
