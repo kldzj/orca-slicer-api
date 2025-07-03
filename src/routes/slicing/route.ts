@@ -1,13 +1,12 @@
-import e, { Router } from "express";
+import { Router } from "express";
 import { uploadModel } from "../../middleware/upload";
 import { AppError } from "../../middleware/error";
-import { listSettings } from "../profiles/settings.service";
 import type { SlicingSettings } from "./models";
 import { sliceModel } from "./slicing.service";
 import fs from "fs/promises";
-import { createWriteStream } from "fs";
 import path from "path";
 import archiver from "archiver";
+import { listSettings } from "../profiles/settings.service";
 
 const router = Router();
 
@@ -16,31 +15,32 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(400, "File is required for slicing");
   }
 
-  const { printer, preset, filament, bedType, allPlates } =
-    req.body as SlicingSettings;
+  const { exportType, printer, preset, filament } = req.body as SlicingSettings;
 
-  if (
-    !printer ||
-    !preset ||
-    !filament ||
-    !bedType ||
-    !(await listSettings("printers")).includes(printer) ||
-    !(await listSettings("presets")).includes(preset) ||
-    !(await listSettings("filaments")).includes(filament)
-  ) {
-    throw new AppError(400, "Invalid or missing slicing settings");
+  if (exportType !== "gcode" && exportType !== "3mf") {
+    throw new AppError(400, "Invalid export type. Must be 'gcode' or '3mf'");
+  }
+
+  if (exportType === "gcode") {
+    if (!printer || !preset) {
+      throw new AppError(
+        400,
+        "Printer and preset are required for G-code export"
+      );
+    }
+
+    if (
+      (await listSettings("printers")).includes(printer) === false ||
+      (await listSettings("presets")).includes(preset) === false
+    ) {
+      throw new AppError(400, "Invalid printer or preset");
+    }
   }
 
   const { gcodes, workdir } = await sliceModel(
     req.file.buffer,
     req.file.originalname,
-    {
-      printer,
-      preset,
-      filament,
-      bedType,
-      allPlates,
-    }
+    req.body as SlicingSettings
   );
 
   if (gcodes.length === 1) {
@@ -68,7 +68,7 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
 
     await archive.finalize();
   } else {
-    throw new AppError(500, "No G-code files generated during slicing");
+    throw new AppError(500, "No files generated during slicing");
   }
 });
 
