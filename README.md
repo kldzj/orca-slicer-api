@@ -4,10 +4,16 @@ A RESTful service that leverages the OrcaSlicer CLI to slice 3D models (STL, STE
 
 This project only provides an REST API to the OrcaSlicer CLI, full credit to the [OrcaSlicer](https://github.com/SoftFever/OrcaSlicer) contributors for the slicer itself.
 
+## Features
+
+- Slice models (STL, STEP, and 3MF) using OrcaSlicer and the profiles exported from it
+- Export sliced models as a single G-code or 3MF (with G-code included) file, or as a ZIP file containing multiple G-code files
+- Set parameters such as plate numbers, auto-arrange, auto-orient, filament, and more.
+
 ## Requirements 
 
 - **Node.js** v22
-- **OrcaSlicer** (tested on Unix with AppImage)
+- **OrcaSlicer** (tested on Linux with AppImage and MacOS)
 
 ## Installation
 
@@ -54,7 +60,7 @@ Each profile is a JSON file from OrcaSlicer.
 There are still several improvements planned:
 
 - ~~Multi-plate slicing support~~ (added for 3MF files, returns ZIP of G-codes)
-- Enhanced slicing options
+- ~~Enhanced slicing options~~
 - ~~Improved error handling~~
 - Better profile management system
 - Strengthened security measures
