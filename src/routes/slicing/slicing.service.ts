@@ -31,26 +31,47 @@ export async function sliceModel(
 
   const basePath = process.env.DATA_PATH || path.join(process.cwd(), "data");
   const settingsArg = `${basePath}/printers/${settings.printer}.json;${basePath}/presets/${settings.preset}.json`;
-  const sliceArg = settings.allPlates === true ? "all" : "0";
 
-  const args = [
-    "--arrange",
-    "1",
-    "--orient",
-    "1",
-    "--slice",
-    sliceArg,
-    "--allow-newer-file",
-    "--load-settings",
-    settingsArg,
-    "--load-filaments",
-    `${basePath}/filaments/${settings.filament}.json`,
-    "--outputdir",
-    outputDir,
-    "--curr-bed-type",
-    settings.bedType,
-    inPath,
-  ];
+  const args: string[] = [];
+
+  if (settings.export === "3mf") {
+    args.push("--export-3mf", "result.3mf");
+  }
+
+  const sliceArg = settings.plate === undefined ? "1" : settings.plate;
+  args.push("--slice", sliceArg);
+
+  if (settings.arrange !== undefined) {
+    args.push("--arrange", settings.arrange ? "1" : "0");
+  }
+
+  if (settings.orient !== undefined) {
+    args.push("--orient", settings.orient ? "1" : "0");
+  }
+
+  if (settings.printer && settings.preset) {
+    args.push("--load-settings", settingsArg);
+  }
+
+  if (settings.filament) {
+    args.push(
+      "--load-filaments",
+      `${basePath}/filaments/${settings.filament}.json`
+    );
+  }
+
+  if (settings.bedType) {
+    args.push("--curr-bed-type", settings.bedType);
+  }
+
+  if (settings.multicolorOnePlate) {
+    args.push("--allow-multicolor-oneplate");
+  }
+
+  args.push("--allow-newer-file");
+  args.push("--outputdir", outputDir);
+
+  args.push(inPath);
 
   if (!process.env.ORCASLICER_PATH) {
     throw new AppError(
@@ -75,9 +96,17 @@ export async function sliceModel(
   }
 
   const files = await fs.readdir(outputDir);
-  const gcodes = files
-    .filter((f) => f.toLowerCase().endsWith(".gcode"))
-    .map((f) => path.join(outputDir, f));
+  let resultFiles: string[];
 
-  return { gcodes, workdir };
+  if (settings.export === "3mf") {
+    resultFiles = files
+      .filter((f) => f.toLowerCase().endsWith(".3mf"))
+      .map((f) => path.join(outputDir, f));
+  } else {
+    resultFiles = files
+      .filter((f) => f.toLowerCase().endsWith(".gcode"))
+      .map((f) => path.join(outputDir, f));
+  }
+
+  return { gcodes: resultFiles, workdir };
 }
