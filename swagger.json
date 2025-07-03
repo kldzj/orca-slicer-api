@@ -59,7 +59,7 @@
                     "type": "boolean",
                     "description": "Auto-orient models (optional, default: false)"
                   },
-                  "export": {
+                  "exportType": {
                     "type": "string",
                     "enum": ["gcode", "3mf"],
                     "description": "Export gcode or 3mf (optional, default: gcode)"
