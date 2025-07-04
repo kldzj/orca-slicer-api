@@ -1,6 +1,6 @@
 {
   "name": "orca-slicer-api",
-  "version": "0.1.0",
+  "version": "1.0.0",
   "description": "A simple REST API for slicing models using OrcaSlicer",
   "scripts": {
     "start": "node --env-file=.env dist/index.js",
