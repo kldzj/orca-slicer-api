@@ -15,28 +15,6 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(400, "File is required for slicing");
   }
 
-  const { exportType, printer, preset, filament } = req.body as SlicingSettings;
-
-  if (exportType !== "gcode" && exportType !== "3mf") {
-    throw new AppError(400, "Invalid export type. Must be 'gcode' or '3mf'");
-  }
-
-  if (exportType === "gcode") {
-    if (!printer || !preset) {
-      throw new AppError(
-        400,
-        "Printer and preset are required for G-code export"
-      );
-    }
-
-    if (
-      (await listSettings("printers")).includes(printer) === false ||
-      (await listSettings("presets")).includes(preset) === false
-    ) {
-      throw new AppError(400, "Invalid printer or preset");
-    }
-  }
-
   const { gcodes, workdir } = await sliceModel(
     req.file.buffer,
     req.file.originalname,
