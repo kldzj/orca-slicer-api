@@ -17,7 +17,28 @@ This project only provides an REST API to the OrcaSlicer CLI, full credit to the
 
 ## Installation
 
-### Local
+### Production
+
+> **WARNING:**
+> This project is still in early development and may not be suitable for real production use yet. Use at your own risk and ensure you add proper security measures.
+
+Use the provided setup script to automate installation, configuration, and PM2 setup:
+
+```bash
+curl -O https://raw.githubusercontent.com/AFKFelix/orca-slicer-api/main/setup.sh
+chmod +x setup.sh
+./setup.sh
+```
+
+The script will:
+
+- Check for required dependencies
+- Clone the repository
+- Prompt for configuration
+- Install dependencies and build the project
+- Start the API with PM2 and optionally set up auto-start
+
+### Local (Development)
 
 ```bash
 git clone https://github.com/AFKFelix/orca-slicer-api.git
@@ -67,6 +88,10 @@ There are still several improvements planned:
 - Better profile management system
 - Strengthened security measures
 - Additional quality-of-life features
+- Auto install of OrcaSlicer on setup script
+- Windows setup support
+- Better documentation
+- Tests and CI/CD setup
 
 Feedback is welcome!
 
