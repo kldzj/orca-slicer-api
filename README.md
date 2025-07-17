@@ -22,7 +22,7 @@ This project only provides an REST API to the OrcaSlicer CLI, full credit to the
 > **WARNING:**
 > This project is still in early development and may not be suitable for real production use yet. Use at your own risk and ensure you add proper security measures.
 
-Use the provided setup script to automate installation, configuration, and PM2 setup:
+Use the provided setup script to automate installation, configuration, and PM2 setup (Unix only):
 
 ```bash
 curl -O https://raw.githubusercontent.com/AFKFelix/orca-slicer-api/main/setup.sh
@@ -37,6 +37,9 @@ The script will:
 - Prompt for configuration
 - Install dependencies and build the project
 - Start the API with PM2 and optionally set up auto-start
+
+Note: This setup works best with the AppImage version of OrcaSlicer. It has been tested successfully on Ubuntu (x86_64) using the AppImage, as well as on Debian running on a Raspberry Pi 4 (ARM64) via Flatpak.
+If you're using the Flatpak version, make sure to grant it access to the temporary directory, as this is required for slicing operations. Additionally, you will need to create a wrapper script or similar solution that can serve as the executable path to the OrcaSlicer binary.
 
 ### Local (Development)
 
