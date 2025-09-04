@@ -103,9 +103,7 @@ export async function sliceModel(
     }
 
     if (json?.error_string) {
-      throw new AppError(
-        500,
-        "Slicing failed with error from slicer: " + json.error_string
+        `Slicing failed with error from slicer: ${json.error_string}`
       );
     }
 
