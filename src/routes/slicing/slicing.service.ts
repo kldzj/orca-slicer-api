@@ -103,6 +103,10 @@ export async function sliceModel(
     }
 
     if (json?.error_string) {
+      await fs.rm(workdir, { recursive: true, force: true });
+
+      throw new AppError(
+        500,
         `Slicing failed with error from slicer: ${json.error_string}`
       );
     }
