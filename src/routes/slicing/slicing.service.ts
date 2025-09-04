@@ -87,25 +87,26 @@ export async function sliceModel(
       stdio: ["ignore", "pipe", "pipe"],
     });
   } catch (err) {
-    const files = await fs.readdir(outputDir);
-    for (const f of files) {
-      const filePath = path.join(outputDir, f);
-      let json;
-      if (f.toLowerCase().endsWith(".json")) {
-        try {
-          const content = await fs.readFile(filePath, "utf-8");
-          json = JSON.parse(content);
-        } catch {
-          // Ignore errors in reading or parsing JSON files
-        }
+    const resultJsonPath = path.join(outputDir, "result.json");
+    let json;
+    try {
+      const content = await fs.readFile(resultJsonPath, "utf-8");
+      json = JSON.parse(content);
+    } catch {
+      await fs.rm(workdir, { recursive: true, force: true });
 
-        if (json?.error_string) {
-          throw new AppError(
-            500,
-            "Slicing failed with error from slicer: " + json.error_string
-          );
-        }
-      }
+      throw new AppError(
+        500,
+        "Failed to slice the model",
+        err instanceof Error ? err.message : String(err)
+      );
+    }
+
+    if (json?.error_string) {
+      throw new AppError(
+        500,
+        "Slicing failed with error from slicer: " + json.error_string
+      );
     }
 
     await fs.rm(workdir, { recursive: true, force: true });
