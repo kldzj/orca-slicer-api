@@ -1,12 +1,11 @@
 import { Router } from "express";
 import { uploadModel } from "../../middleware/upload";
 import { AppError } from "../../middleware/error";
-import type { SlicingSettings } from "./models";
-import { sliceModel } from "./slicing.service";
+import type { SliceMetaData, SlicingSettings } from "./models";
+import { getMetaDataFromGCode, sliceModel } from "./slicing.service";
 import fs from "fs/promises";
 import path from "path";
 import archiver from "archiver";
-import { listSettings } from "../profiles/settings.service";
 
 const router = Router();
 
@@ -23,11 +22,33 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
 
   if (gcodes.length === 1) {
     try {
+      if (gcodes[0].endsWith(".gcode")) {
+        const metadata = await getMetaDataFromGCode(gcodes[0]);
+        res.set(generateMetaDataHeaders(metadata));
+      }
+
       res.download(gcodes[0]);
     } finally {
       await fs.rm(workdir, { recursive: true, force: true });
     }
   } else if (gcodes.length > 1) {
+    const metadata: SliceMetaData = {
+      printTime: 0,
+      filamentUsedG: 0,
+      filamentUsedMm: 0,
+    };
+
+    for (const filePath of gcodes) {
+      if (!filePath.endsWith(".gcode")) return;
+
+      const fileMetadata = await getMetaDataFromGCode(filePath);
+      metadata.printTime += fileMetadata.printTime;
+      metadata.filamentUsedG += fileMetadata.filamentUsedG;
+      metadata.filamentUsedMm += fileMetadata.filamentUsedMm;
+    }
+
+    res.set(generateMetaDataHeaders(metadata));
+
     res.attachment("result.zip");
     const archive = archiver("zip", { zlib: { level: 9 } });
 
@@ -49,5 +70,13 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     throw new AppError(500, "No files generated during slicing");
   }
 });
+
+function generateMetaDataHeaders(metadata: SliceMetaData) {
+  const headers: Record<string, string> = {};
+  headers["X-Print-Time-Seconds"] = metadata.printTime.toString();
+  headers["X-Filament-Used-g"] = metadata.filamentUsedG.toString();
+  headers["X-Filament-Used-mm"] = metadata.filamentUsedMm.toString();
+  return headers;
+}
 
 export default router;
