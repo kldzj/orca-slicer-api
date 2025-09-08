@@ -2,7 +2,7 @@ import { Router } from "express";
 import { uploadModel } from "../../middleware/upload";
 import { AppError } from "../../middleware/error";
 import type { SliceMetaData, SlicingSettings } from "./models";
-import { getMetaDataFromGCode, sliceModel } from "./slicing.service";
+import { getMetaDataFromFile, sliceModel } from "./slicing.service";
 import fs from "fs/promises";
 import path from "path";
 import archiver from "archiver";
@@ -22,10 +22,8 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
 
   if (gcodes.length === 1) {
     try {
-      if (gcodes[0].endsWith(".gcode")) {
-        const metadata = await getMetaDataFromGCode(gcodes[0]);
-        res.set(generateMetaDataHeaders(metadata));
-      }
+      const metadata = await getMetaDataFromFile(gcodes[0]);
+      res.set(generateMetaDataHeaders(metadata));
 
       res.download(gcodes[0]);
     } finally {
@@ -41,7 +39,7 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     for (const filePath of gcodes) {
       if (!filePath.endsWith(".gcode")) return;
 
-      const fileMetadata = await getMetaDataFromGCode(filePath);
+      const fileMetadata = await getMetaDataFromFile(filePath);
       metadata.printTime += fileMetadata.printTime;
       metadata.filamentUsedG += fileMetadata.filamentUsedG;
       metadata.filamentUsedMm += fileMetadata.filamentUsedMm;
