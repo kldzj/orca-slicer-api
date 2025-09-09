@@ -22,6 +22,21 @@ This project only provides an REST API to the OrcaSlicer CLI, full credit to the
 > **WARNING:**
 > This project is still in early development and may not be suitable for real production use yet. Use at your own risk and ensure you add proper security measures.
 
+#### Docker (Recommended)
+
+You can run the service in a Docker container. This was tested on Linux for now only and might still have some issues.
+
+Run the following commands to set up and start the Docker container:
+
+```bash
+git clone https://github.com/AFKFelix/orca-slicer-api.git
+cd orca-slicer-api
+docker build -t orca-slicer-api .
+docker run -d -p 3000:3000 --name orca-slicer-api orca-slicer-api
+```
+
+#### Setup Script
+
 Use the provided setup script to automate installation, configuration, and PM2 setup (Unix only):
 
 ```bash
