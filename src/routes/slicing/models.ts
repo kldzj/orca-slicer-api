@@ -15,4 +15,10 @@ export interface SliceResult {
   workdir: string;
 }
 
+export interface SliceMetaData {
+  printTime: number; //print time in seconds
+  filamentUsedG: number; // filament used in grams
+  filamentUsedMm: number; // total length of filament used in millimeters
+}
+
 export type Category = "printers" | "presets" | "filaments";
