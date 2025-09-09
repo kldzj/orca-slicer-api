@@ -23,7 +23,7 @@ RUN apt-get update \
 		curl ca-certificates \
         libgl1 libgl1-mesa-dri libegl1 \
         libgtk-3-0 \
-        libgstreamer1.0-0 librust-gstreamer-video-sys-dev \
+        libgstreamer1.0-0 libgstreamer-plugins-base1.0-0 \
         libwebkit2gtk-4.0-37 \
 	&& update-ca-certificates \
 	&& rm -rf /var/lib/apt/lists/*
