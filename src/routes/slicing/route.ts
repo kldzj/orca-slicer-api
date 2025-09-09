@@ -37,7 +37,7 @@ router.post("/", uploadModel.single("file"), async (req, res) => {
     };
 
     for (const filePath of gcodes) {
-      if (!filePath.endsWith(".gcode")) return;
+      if (!filePath.endsWith(".gcode")) continue;
 
       const fileMetadata = await getMetaDataFromFile(filePath);
       metadata.printTime += fileMetadata.printTime;
